@@ -14,7 +14,7 @@ namespace Xades.Helpers
         /// <returns>Сертификат с нужным отпечатком</returns>
         public static X509Certificate2 GetCertificateByThumbprint(string thumbprint)
         {
-            var certificateStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            X509Store certificateStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 
             try
             {
@@ -23,6 +23,17 @@ namespace Xades.Helpers
                                                             .Cast<X509Certificate2>()
                                                             .Where(i => string.Equals(i.Thumbprint, thumbprint, StringComparison.InvariantCultureIgnoreCase))
                                                             .ToArray();
+                
+                if (!certificateCollection.Any())
+                {
+                    certificateStore.Close();
+                    certificateStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+                    certificateStore.Open(OpenFlags.ReadOnly);
+                    certificateCollection = certificateStore.Certificates
+                                                            .Cast<X509Certificate2>()
+                                                            .Where(i => string.Equals(i.Thumbprint, thumbprint, StringComparison.InvariantCultureIgnoreCase))
+                                                            .ToArray();
+                }
 
                 if (!certificateCollection.Any())
                 {
